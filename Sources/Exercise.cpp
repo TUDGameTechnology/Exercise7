@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include <Kore/Application.h>
+#include <Kore/System.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Math/Core.h>
 #include <Kore/System.h>
@@ -143,7 +143,7 @@ namespace {
 		// vec3(0, 2, -3), vec3(0, 2, 0)
 		V = mat4::lookAt(eye, vec3(eye.x(), eye.y(), eye.z() + 3), vec3(0, 1, 0));
 		//V = mat4::lookAt(eye, globe, vec3(0, 1, 0)); //rotation test, can be deleted
-		P = mat4::Perspective(60, (float)width / (float)height, 0.1f, 100);
+		P = mat4::Perspective(Kore::pi * 2 / 3, (float)width / (float)height, 0.1f, 100);
 		Graphics::setMatrix(vLocation, V);
 		Graphics::setMatrix(pLocation, P);
 
@@ -243,15 +243,15 @@ namespace {
 		}
 	}
 	
-	void mouseMove(int x, int y, int movementX, int movementY) {
+	void mouseMove(int window, int x, int y, int movementX, int movementY) {
 
 	}
 	
-	void mousePress(int button, int x, int y) {
+	void mousePress(int window, int button, int x, int y) {
 
 	}
 
-	void mouseRelease(int button, int x, int y) {
+	void mouseRelease(int window, int button, int x, int y) {
 
 	}
 
@@ -301,11 +301,11 @@ namespace {
 }
 
 int kore(int argc, char** argv) {
-	Application* app = new Application(argc, argv, width, height, 0, false, "Exercise6");
+	Kore::System::init("Exercise 7", width, height);
 	
 	init();
 
-	app->setCallback(update);
+	Kore::System::setCallback(update);
 
 	startTime = System::time();
 	Kore::Mixer::init();
@@ -318,9 +318,7 @@ int kore(int argc, char** argv) {
 	Mouse::the()->Press = mousePress;
 	Mouse::the()->Release = mouseRelease;
 
-	app->start();
-
-	delete app;
+	Kore::System::start();
 	
 	return 0;
 }
