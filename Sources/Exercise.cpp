@@ -35,9 +35,9 @@ public:
 		}
 		vertexBuffer->unlock();
 
-		indexBuffer = new IndexBuffer(mesh->numFaces * 3);
+		indexBuffer = new IndexBuffer(mesh->numIndices);
 		int* indices = indexBuffer->lock();
-		for (int i = 0; i < mesh->numFaces * 3; i++) {
+		for (int i = 0; i < mesh->numIndices; i++) {
 			indices[i] = mesh->indices[i];
 		}
 		indexBuffer->unlock();
@@ -287,7 +287,9 @@ namespace {
 		objects[1]->M = mat4::Translation(light.x(), light.y(), light.z());
 
 		Graphics::setRenderState(DepthTest, true);
+		Graphics::setRenderState(DepthWrite, true);
 		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
+		Graphics::setRenderState(BackfaceCulling, true);
 
 		Graphics::setTextureAddressing(tex, Kore::U, Repeat);
 		Graphics::setTextureAddressing(tex, Kore::V, Repeat);

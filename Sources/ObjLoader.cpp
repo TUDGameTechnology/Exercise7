@@ -147,6 +147,7 @@ namespace {
 			mesh->curIndex[2] = verts[0];
 			mesh->curIndex += 3;
 			mesh->numFaces += 2;
+			mesh->numIndices += 6;
 		}
 		else {
 			// We have a triangle
@@ -165,6 +166,7 @@ namespace {
 			}
 			mesh->curIndex += 3;
 			mesh->numFaces += 1;
+			mesh->numIndices += 3;
 		}
 	}
 
@@ -215,6 +217,7 @@ Mesh* loadObj(const char* filename) {
 	source[length] = 0;
 	
 	Mesh* mesh = new Mesh;
+	mesh->numIndices = 0;
 
 	int vertices = countVertices(source);
 	mesh->vertices = new float[vertices * 8];
