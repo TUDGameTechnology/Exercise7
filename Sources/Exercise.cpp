@@ -9,9 +9,8 @@
 #include <Kore/Audio/Mixer.h>
 #include <Kore/Graphics/Image.h>
 #include <Kore/Graphics/Graphics.h>
+#include <Kore/Log.h>
 #include "ObjLoader.h"
-#include <algorithm>
-#include <iostream>
 
 using namespace Kore;
 
@@ -182,43 +181,43 @@ namespace {
 		}
 		else if (code == Key_B) {
 			mode = 0;
-			std::cout << "Complete BRDF" << std::endl;
+			log(Info, "Complete BRDF");
 		}
 		else if (code == Key_F) {
 			mode = 1;
-			std::cout << "Schlick's Fresnel approximation" << std::endl;
+			log(Info, "Schlick's Fresnel approximation");
 		}
 		else if (code == Key_D) {
 			mode = 2;
-			std::cout << "Trowbridge-Reitz normal distribution term" << std::endl;
+			log(Info, "Trowbridge-Reitz normal distribution term");
 		}
 		else if (code == Key_G) {
 			mode = 3;
-			std::cout << "Cook and Torrance's geometry factor" << std::endl;
+			log(Info, "Cook and Torrance's geometry factor");
 		}
 		else if (code == Key_T) {
 			toggle = !toggle;
 		}
 		else if (code == Key_R) {
 			if (toggle) {
-				roughness = std::max(roughness - 0.1f, 0.0f);
+				roughness = Kore::max(roughness - 0.1f, 0.0f);
 			}
 			else {
-				roughness = std::min(roughness + 0.1f, 1.0f);
+				roughness = Kore::min(roughness + 0.1f, 1.0f);
 			}
-			std::cout << "Roughness: " << roughness << std::endl;
+			log(Info, "Roughness: %f", roughness);
 		}
 		else if (code == Key_E) {
 			if (toggle) {
-				specular = std::max(specular - 0.1f, 0.0f);
+				specular = Kore::max(specular - 0.1f, 0.0f);
 			}
 			else {
-				specular = std::min(specular + 0.1f, 1.0f);
+				specular = Kore::min(specular + 0.1f, 1.0f);
 			}
-			std::cout << "Specular: " << specular << std::endl;
+			log(Info, "Specular: %f", specular);
 		}
 		else if (code == Key_Space) {
-			std::cout << "hi" << std::endl;
+			log(Info, "hi");
 		}
 	}
 	
@@ -294,9 +293,9 @@ namespace {
 		Graphics::setTextureAddressing(tex, Kore::U, Repeat);
 		Graphics::setTextureAddressing(tex, Kore::V, Repeat);
 		
-		std::cout << "Showing complete BRDF" << std::endl;
-		std::cout << "Roughness: " << roughness << std::endl;
-		std::cout << "Specular: " << specular << std::endl;
+		log(Info, "Showing complete BRDF");
+		log(Info, "Roughness: %f", roughness);
+		log(Info, "Specular: %f", specular);
 
 		eye = vec3(0, 2, -3);
 	}
