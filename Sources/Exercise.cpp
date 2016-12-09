@@ -91,6 +91,7 @@ namespace {
 	vec3 eye;
 	vec3 globe = vec3(0, 0, 0);
 	vec3 light = vec3(0, 1.5f, -3.0f);
+
 	
 	bool left, right, up, down, forward, backward;
 	int mode = 0;
