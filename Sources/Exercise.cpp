@@ -90,9 +90,8 @@ namespace {
 	ConstantLocation modeLocation;
 
 	vec3 eye;
-	vec3 globe = vec3(0, 1.95f, -2.5f);
-	//vec3 globe = vec3(0.7f, 1.2f, -0.2f);
-	vec3 light = vec3(0, 1.95f, -3.0f);
+	vec3 globe = vec3(0, 0, 0);
+	vec3 light = vec3(0, 1.5f, -3.0f);
 	
 	bool left, right, up, down, forward, backward;
 	int mode = 0;
