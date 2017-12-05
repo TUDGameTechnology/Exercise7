@@ -10,6 +10,8 @@
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Graphics4/PipelineState.h>
 #include <Kore/Log.h>
+
+#include "Memory.h"
 #include "ObjLoader.h"
 
 using namespace Kore;
@@ -252,6 +254,8 @@ namespace {
 	}
 
 	void init() {
+		Memory::init();
+
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
 		vertexShader = new Graphics4::Shader(vs.readAll(), vs.size(), Graphics4::VertexShader);
