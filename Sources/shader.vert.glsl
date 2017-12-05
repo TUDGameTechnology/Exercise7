@@ -1,14 +1,16 @@
-attribute vec3 pos;
-attribute vec2 tex;
-attribute vec3 nor;
-varying vec3 position;
-varying vec2 texCoord;
-varying vec3 normal;
+#version 450
+
+in vec3 pos;
+in vec2 tex;
+in vec3 nor;
+out vec3 position;
+out vec2 texCoord;
+out vec3 normal;
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 
-void kore() {
+void main() {
 	vec4 newPos = M * vec4(pos.x, pos.y, pos.z, 1.0);
 	gl_Position = P * V * newPos;
 	position = newPos.xyz / newPos.w;

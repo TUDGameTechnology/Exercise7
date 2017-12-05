@@ -6,9 +6,9 @@
 #include <Kore/System.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
-#include <Kore/Audio/Mixer.h>
-#include <Kore/Graphics/Image.h>
-#include <Kore/Graphics/Graphics.h>
+#include <Kore/Graphics1/Image.h>
+#include <Kore/Graphics4/Graphics.h>
+#include <Kore/Graphics4/PipelineState.h>
 #include <Kore/Log.h>
 #include "ObjLoader.h"
 
@@ -16,11 +16,11 @@ using namespace Kore;
 
 class MeshObject {
 public:
-	MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale = 1.0f) {
+	MeshObject(const char* meshFile, const char* textureFile, const Graphics4::VertexStructure& structure, float scale = 1.0f) {
 		mesh = loadObj(meshFile);
-		image = new Texture(textureFile, true);
+		image = new Graphics4::Texture(textureFile, true);
 
-		vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+		vertexBuffer = new Graphics4::VertexBuffer(mesh->numVertices, structure, 0);
 		float* vertices = vertexBuffer->lock();
 		for (int i = 0; i < mesh->numVertices; ++i) {
 			vertices[i * 8 + 0] = mesh->vertices[i * 8 + 0] * scale;
@@ -34,7 +34,7 @@ public:
 		}
 		vertexBuffer->unlock();
 
-		indexBuffer = new IndexBuffer(mesh->numIndices);
+		indexBuffer = new Graphics4::IndexBuffer(mesh->numIndices);
 		int* indices = indexBuffer->lock();
 		for (int i = 0; i < mesh->numIndices; i++) {
 			indices[i] = mesh->indices[i];
@@ -44,31 +44,31 @@ public:
 		M = mat4::Identity();
 	}
 
-	void render(TextureUnit tex) {
+	void render(Graphics4::TextureUnit tex) {
 		//image->_set(tex);
-		Graphics::setTexture(tex, image);
+		Graphics4::setTexture(tex, image);
 		//vertexBuffer->_set();
-		Graphics::setVertexBuffer(*vertexBuffer);
+		Graphics4::setVertexBuffer(*vertexBuffer);
 		//indexBuffer->_set();
-		Graphics::setIndexBuffer(*indexBuffer);
-		Graphics::drawIndexedVertices();
+		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::drawIndexedVertices();
 	}
 
 	mat4 M;
 private:
-	VertexBuffer* vertexBuffer;
-	IndexBuffer* indexBuffer;
+	Graphics4::VertexBuffer* vertexBuffer;
+	Graphics4::IndexBuffer* indexBuffer;
 	Mesh* mesh;
-	Texture* image;
+	Graphics4::Texture* image;
 };
 
 namespace {
 	const int width = 1024;
 	const int height = 768;
 	double startTime;
-	Shader* vertexShader;
-	Shader* fragmentShader;
-	Program* program;
+	Graphics4::Shader* vertexShader;
+	Graphics4::Shader* fragmentShader;
+	Graphics4::PipelineState* pipeline;
 
 	// null terminated array of MeshObject pointers
 	MeshObject* objects[] = { nullptr, nullptr, nullptr, nullptr, nullptr };
@@ -78,15 +78,15 @@ namespace {
 	mat4 V;
 
 	// uniform locations - add more as you see fit
-	TextureUnit tex;
-	ConstantLocation pLocation;
-	ConstantLocation vLocation;
-	ConstantLocation mLocation;
-	ConstantLocation lightLocation;
-	ConstantLocation eyeLocation;
-	ConstantLocation specLocation;
-	ConstantLocation roughnessLocation;
-	ConstantLocation modeLocation;
+	Graphics4::TextureUnit tex;
+	Graphics4::ConstantLocation pLocation;
+	Graphics4::ConstantLocation vLocation;
+	Graphics4::ConstantLocation mLocation;
+	Graphics4::ConstantLocation lightLocation;
+	Graphics4::ConstantLocation eyeLocation;
+	Graphics4::ConstantLocation specLocation;
+	Graphics4::ConstantLocation roughnessLocation;
+	Graphics4::ConstantLocation modeLocation;
 
 	vec3 eye;
 	vec3 globe = vec3(0, 0, 0);
@@ -101,7 +101,6 @@ namespace {
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
-		Kore::Audio::update();
 
 		const float speed = 0.05f;
 		if (left) {
@@ -123,82 +122,80 @@ namespace {
 			eye.y() -= speed;
 		}
 		
-		Graphics::begin();
-		Graphics::clear(Graphics::ClearColorFlag | Graphics::ClearDepthFlag, 0xff000000, 1000.0f);
+		Graphics4::begin();
+		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, 0xff000000, 1000.0f);
 		
-		program->set();
+		Graphics4::setPipeline(pipeline);
 
-		/*
-		Set your uniforms for the light vector, the roughness and all further constants you encounter in the BRDF terms.
-		The BRDF itself should be implemented in the fragment shader.
-		*/
-		Graphics::setFloat3(lightLocation, light);
-		Graphics::setFloat3(eyeLocation, eye);
-		Graphics::setFloat(specLocation, specular);
-		Graphics::setFloat(roughnessLocation, roughness);
-		Graphics::setInt(modeLocation, mode);
+		// Set your uniforms for the light vector, the roughness and all further constants you encounter in the BRDF terms.
+		// The BRDF itself should be implemented in the fragment shader.
+		Graphics4::setFloat3(lightLocation, light);
+		Graphics4::setFloat3(eyeLocation, eye);
+		Graphics4::setFloat(specLocation, specular);
+		Graphics4::setFloat(roughnessLocation, roughness);
+		Graphics4::setInt(modeLocation, mode);
 
 		// set the camera
 		// vec3(0, 2, -3), vec3(0, 2, 0)
 		V = mat4::lookAt(eye, vec3(eye.x(), eye.y(), eye.z() + 3), vec3(0, 1, 0));
 		//V = mat4::lookAt(eye, globe, vec3(0, 1, 0)); //rotation test, can be deleted
 		P = mat4::Perspective(Kore::pi * 2 / 3, (float)width / (float)height, 0.1f, 100);
-		Graphics::setMatrix(vLocation, V);
-		Graphics::setMatrix(pLocation, P);
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
 
 		// iterate the MeshObjects
 		MeshObject** current = &objects[0];
 		while (*current != nullptr) {
 			// set the model matrix
-			Graphics::setMatrix(mLocation, (*current)->M);
+			Graphics4::setMatrix(mLocation, (*current)->M);
 
 			(*current)->render(tex);
 			++current;
 		}
 
-		Graphics::end();
-		Graphics::swapBuffers();
+		Graphics4::end();
+		Graphics4::swapBuffers();
 	}
 
-	void keyDown(KeyCode code, wchar_t character) {
-		if (code == Key_Left) {
+	void keyDown(KeyCode code) {
+		if (code == KeyLeft) {
 			left = true;
 		}
-		else if (code == Key_Right) {
+		else if (code == KeyRight) {
 			right = true;
 		}
-		else if (code == Key_Up) {
+		else if (code == KeyUp) {
 			forward = true;
 		}
-		else if (code == Key_Down) {
+		else if (code == KeyDown) {
 			backward = true;
 		}
-		else if (code == Key_W) {
+		else if (code == KeyW) {
 			up = true;
 		}
-		else if (code == Key_S) {
+		else if (code == KeyS) {
 			down = true;
 		}
-		else if (code == Key_B) {
+		else if (code == KeyB) {
 			mode = 0;
 			log(Info, "Complete BRDF");
 		}
-		else if (code == Key_F) {
+		else if (code == KeyF) {
 			mode = 1;
 			log(Info, "Schlick's Fresnel approximation");
 		}
-		else if (code == Key_D) {
+		else if (code == KeyD) {
 			mode = 2;
 			log(Info, "Trowbridge-Reitz normal distribution term");
 		}
-		else if (code == Key_G) {
+		else if (code == KeyG) {
 			mode = 3;
 			log(Info, "Cook and Torrance's geometry factor");
 		}
-		else if (code == Key_T) {
+		else if (code == KeyT) {
 			toggle = !toggle;
 		}
-		else if (code == Key_R) {
+		else if (code == KeyR) {
 			if (toggle) {
 				roughness = Kore::max(roughness - 0.1f, 0.0f);
 			}
@@ -207,7 +204,7 @@ namespace {
 			}
 			log(Info, "Roughness: %f", roughness);
 		}
-		else if (code == Key_E) {
+		else if (code == KeyE) {
 			if (toggle) {
 				specular = Kore::max(specular - 0.1f, 0.0f);
 			}
@@ -216,28 +213,28 @@ namespace {
 			}
 			log(Info, "Specular: %f", specular);
 		}
-		else if (code == Key_Space) {
+		else if (code == KeySpace) {
 			log(Info, "hi");
 		}
 	}
 	
-	void keyUp(KeyCode code, wchar_t character) {
-		if (code == Key_Left) {
+	void keyUp(KeyCode code) {
+		if (code == KeyLeft) {
 			left = false;
 		}
-		else if (code == Key_Right) {
+		else if (code == KeyRight) {
 			right = false;
 		}
-		else if (code == Key_Up) {
+		else if (code == KeyUp) {
 			forward = false;
 		}
-		else if (code == Key_Down) {
+		else if (code == KeyDown) {
 			backward = false;
 		}
-		else if (code == Key_W) {
+		else if (code == KeyW) {
 			up = false;
 		}
-		else if (code == Key_S) {
+		else if (code == KeyS) {
 			down = false;
 		}
 	}
@@ -257,41 +254,41 @@ namespace {
 	void init() {
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
-		vertexShader = new Shader(vs.readAll(), vs.size(), VertexShader);
-		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
+		vertexShader = new Graphics4::Shader(vs.readAll(), vs.size(), Graphics4::VertexShader);
+		fragmentShader = new Graphics4::Shader(fs.readAll(), fs.size(), Graphics4::FragmentShader);
 
 		// This defines the structure of your Vertex Buffer
-		VertexStructure structure;
-		structure.add("pos", Float3VertexData);
-		structure.add("tex", Float2VertexData);
-		structure.add("nor", Float3VertexData);
+		Graphics4::VertexStructure structure;
+		structure.add("pos", Graphics4::Float3VertexData);
+		structure.add("tex", Graphics4::Float2VertexData);
+		structure.add("nor", Graphics4::Float3VertexData);
 
-		program = new Program;
-		program->setVertexShader(vertexShader);
-		program->setFragmentShader(fragmentShader);
-		program->link(structure);
+		pipeline = new Graphics4::PipelineState;
+		pipeline->inputLayout[0] = &structure;
+		pipeline->inputLayout[1] = nullptr;
+		pipeline->vertexShader = vertexShader;
+		pipeline->fragmentShader = fragmentShader;
+		pipeline->depthMode = Graphics4::ZCompareLess;
+		pipeline->depthWrite = true;
+		pipeline->cullMode = Graphics4::Clockwise;
+		pipeline->compile();
 
-		tex = program->getTextureUnit("tex");
-		pLocation = program->getConstantLocation("P");
-		vLocation = program->getConstantLocation("V");
-		mLocation = program->getConstantLocation("M");
-		lightLocation = program->getConstantLocation("light");
-		eyeLocation = program->getConstantLocation("eye");
-		specLocation = program->getConstantLocation("spec");
-		roughnessLocation = program->getConstantLocation("roughness");
-		modeLocation = program->getConstantLocation("mode");
+		tex = pipeline->getTextureUnit("tex");
+		pLocation = pipeline->getConstantLocation("P");
+		vLocation = pipeline->getConstantLocation("V");
+		mLocation = pipeline->getConstantLocation("M");
+		lightLocation = pipeline->getConstantLocation("light");
+		eyeLocation = pipeline->getConstantLocation("eye");
+		specLocation = pipeline->getConstantLocation("spec");
+		roughnessLocation = pipeline->getConstantLocation("roughness");
+		modeLocation = pipeline->getConstantLocation("mode");
 		objects[0] = new MeshObject("ball.obj", "ball_tex.png", structure);
 		objects[0]->M = mat4::Translation(globe.x(), globe.y(), globe.z()) * mat4::RotationY(180.0f);
 		objects[1] = new MeshObject("ball.obj", "light_tex.png", structure, 0.3f);
 		objects[1]->M = mat4::Translation(light.x(), light.y(), light.z());
 
-		Graphics::setRenderState(DepthTest, true);
-		Graphics::setRenderState(DepthWrite, true);
-		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
-		Graphics::setRenderState(BackfaceCulling, true);
-
-		Graphics::setTextureAddressing(tex, Kore::U, Repeat);
-		Graphics::setTextureAddressing(tex, Kore::V, Repeat);
+		Graphics4::setTextureAddressing(tex, Graphics4::U, Graphics4::Repeat);
+		Graphics4::setTextureAddressing(tex, Graphics4::V, Graphics4::Repeat);
 		
 		log(Info, "Showing complete BRDF");
 		log(Info, "Roughness: %f", roughness);
@@ -309,9 +306,6 @@ int kore(int argc, char** argv) {
 	Kore::System::setCallback(update);
 
 	startTime = System::time();
-	Kore::Mixer::init();
-	Kore::Audio::init();
-	//Kore::Mixer::play(new SoundStream("back.ogg", true));
 	
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;
