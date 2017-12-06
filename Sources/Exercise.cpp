@@ -274,7 +274,7 @@ namespace {
 		pipeline->fragmentShader = fragmentShader;
 		pipeline->depthMode = Graphics4::ZCompareLess;
 		pipeline->depthWrite = true;
-		pipeline->cullMode = Graphics4::Clockwise;
+		pipeline->cullMode = Graphics4::CounterClockwise;
 		pipeline->compile();
 
 		tex = pipeline->getTextureUnit("tex");
